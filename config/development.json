@@ -1,0 +1,8 @@
+{
+  "env": "development",
+  "port": 5000,
+  "db": {
+    "host": "mongodb://localhost:27017/generaldb?retryWrites=true&w=majority",
+    "name": "generaldb"
+  }
+}
