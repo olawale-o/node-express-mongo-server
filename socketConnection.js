@@ -4,11 +4,11 @@
 const { MongoClient } = require('mongodb');
 const { ObjectID } = require('bson');
 const config = require('./config');
+const conversationService = require('./conversation/service');
 
 const client = new MongoClient(config.get('db.host'));
 
 const User = client.db(config.get('db.name')).collection('users');
-const Conversation = client.db(config.get('db.name')).collection('conversations');
 
 const sessions = new Map();
 const messages = [];
@@ -107,27 +107,13 @@ module.exports = function scoketConnection(IO) {
         text,
         username: socket.username,
       };
-      await Conversation.insertOne({
-        from: socket.userId,
-        to,
-        text,
-        createdAt: new Date(Date.now()),
-        updatedAt: new Date(Date.now()),
-      });
+      await conversationService.newChat({ from: socket.userId, to, text });
       socket.to(to).emit('private message', newMessage);
       // saveMessages(newMessage);
     });
 
     socket.on('user messages', async ({ _id, username }) => {
-      const dbMessagess = await Conversation.aggregate([
-        {
-          $match: {
-            $or: [
-              { $and: [{ from: socket._id }, { to: _id }] },
-              { $and: [{ from: _id }, { to: socket._id }] },
-            ],
-          },
-        }]).toArray();
+      const dbMessagess = await conversationService.chats({ socketId: socket._id, userId: _id });
       // const userMessages = getMessagesForUser(socket._id);
       socket.emit('user messages', {
         userId: _id,
