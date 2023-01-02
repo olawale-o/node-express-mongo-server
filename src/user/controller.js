@@ -36,12 +36,15 @@ module.exports = {
       const user = await userService.login({ username, password });
       const accessToken = await tokenService.signAccessToken({ userId: user.insertedId });
       const refreshToken = await tokenService.signRefreshToken({ userId: user.insertedId });
-      // await userService.updateToken(user.insertedId, { $set: { accessToken, refreshToken } });
+      await userService.updateToken(user.insertedId, { $set: { accessToken, refreshToken } });
       res.cookie('jwt', refreshToken, {
         httpOnly: true, sameSite: 'None', secure: true, maxAge: 1000 * 60 * 60 * 24,
       });
       return res.status(200).json({
-        user,
+        // eslint-disable-next-line no-underscore-dangle
+        id: user._id,
+        name: user.name,
+        username: user.username,
         accessToken,
         refreshToken,
       });
