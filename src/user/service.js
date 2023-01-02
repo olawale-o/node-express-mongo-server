@@ -1,5 +1,11 @@
 const bcrypt = require('bcryptjs');
 const repo = require('./repository');
+const AppError = require('../common/app-error');
+
+const verifyUserName = async (crendentials) => repo.findByUsername(crendentials);
+const verifyPassword = async ({ password, passwordEncrypt }) => (
+  bcrypt.compareSync(password, passwordEncrypt)
+);
 
 module.exports = {
   register: async (crendentials) => {
@@ -13,14 +19,14 @@ module.exports = {
     });
   },
   login: async (credentials) => {
-    const user = this.verifyUserName(credentials);
-    if (this.verifyPassword({ password: user.password, passwordEncrypt: 'encrypt' })) {
-      throw new Error('Password invalid');
+    const user = await verifyUserName(credentials);
+    if (!(await
+    verifyPassword({ password: credentials.password, passwordEncrypt: user.password })
+    )) {
+      throw new AppError(422, 'Invalid credentials');
     }
     return user;
   },
   getToken: async (credentials) => repo.findById(credentials),
   updateToken: async (credentials, operation) => repo.findByIdAndUpdate(credentials, operation),
-  verifyUserName: async (crendentials) => repo.findByUsername(crendentials),
-  verifyPassword: async ({ password, passwordEncrypt }) => password === passwordEncrypt,
 };
