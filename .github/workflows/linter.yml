@@ -2,7 +2,7 @@ name: Linters
 run-name: ${{github.actor}} made ${{github.event_name}} to ${{github.repository}}
 
 on:
-  [push]
+  [pull_request]
 
 jobs:
   eslint:
