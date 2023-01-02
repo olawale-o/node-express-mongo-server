@@ -48,7 +48,7 @@ module.exports = function scoketConnection(IO) {
         socket.sessionId = sessionId;
         socket.userId = session.userId;
         socket.username = session.username;
-        socket._id = session._id;
+        socket.id = session.id;
         return next();
       }
       return next(new Error('Invalid session'));
@@ -58,9 +58,9 @@ module.exports = function scoketConnection(IO) {
       return next(new Error('invalid user details'));
     }
     socket.username = user.username;
-    socket.userId = user._id;
-    socket.sessionId = user._id;
-    socket._id = user._id;
+    socket.userId = user.id;
+    socket.sessionId = user.id;
+    socket.id = user.id;
     return next();
   });
 
@@ -68,7 +68,7 @@ module.exports = function scoketConnection(IO) {
     saveSession(socket.sessionId, {
       userId: socket.userId,
       username: socket.username,
-      _id: socket._id,
+      id: socket.id,
       online: true,
     });
     await socket.join(socket.userId);
@@ -85,19 +85,19 @@ module.exports = function scoketConnection(IO) {
       }
     });
     // connect to database and update user online status
-    await User.findOneAndUpdate({ _id: ObjectID(socket.userId) }, { $set: { online: true } });
+    await User.findOneAndUpdate({ id: ObjectID(socket.userId) }, { $set: { online: true } });
     await socket.emit('session', { sessionId: socket.sessionId, userId: socket.userId, username: socket.username });
     // all connected users
 
     // get all user's follower online
-    const onlineFollowers = await User.find({ _id: { $ne: ObjectID(socket.userId) } }).toArray();
+    const onlineFollowers = await User.find({ id: { $ne: ObjectID(socket.userId) } }).toArray();
     socket.emit('users', onlineFollowers);
 
     await socket.broadcast.emit('user connected', {
       userId: socket.userId,
       username: socket.username,
       sessionId: socket.sessionId,
-      _id: socket._id,
+      id: socket.id,
     });
 
     socket.on('private message', async ({ text, to }) => {
@@ -112,14 +112,14 @@ module.exports = function scoketConnection(IO) {
       // saveMessages(newMessage);
     });
 
-    socket.on('user messages', async ({ _id, username }) => {
-      const dbMessagess = await conversationService.chats({ socketId: socket._id, userId: _id });
-      // const userMessages = getMessagesForUser(socket._id);
+    socket.on('user messages', async ({ id, username }) => {
+      const dbMessagess = await conversationService.chats({ socketId: socket.id, userId: id });
+      // const userMessages = getMessagesForUser(socket.id);
       socket.emit('user messages', {
-        userId: _id,
-        _id,
+        userId: id,
+        id,
         username,
-        messages: dbMessagess || [], // userMessages.get(_id) || []
+        messages: dbMessagess || [], // userMessages.get(id) || []
       });
     });
 
@@ -127,7 +127,7 @@ module.exports = function scoketConnection(IO) {
       const matchingSockets = await IO.in(socket.userId).allSockets();
       const isDisconnected = matchingSockets.size === 0;
       if (isDisconnected) {
-        await User.findOneAndUpdate({ _id: ObjectID(socket.userId) }, { $set: { online: false } });
+        await User.findOneAndUpdate({ id: ObjectID(socket.userId) }, { $set: { online: false } });
         socket.broadcast.emit('user disconnected', {
           userId: socket.userId,
           username: socket.username,
