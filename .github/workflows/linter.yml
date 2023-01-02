@@ -1,0 +1,27 @@
+name: Linters
+run-name: ${{github.actor}} made ${{github.event_name}} to ${{github.repository}}
+
+on:
+  [pull_request]
+
+jobs:
+  eslint:
+    name: ESLint
+    strategy:
+      matrix:
+        node-version: [16.x]
+        os: [ubuntu-latest]
+    runs-on: ${{matrix.os}}
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v3
+      - name: Use Nodejs ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{matrix.node-version}}
+      - name: Setup Eslint
+        run: |
+          npm install --save-dev eslint@8.x eslint-config-airbnb-base@15.x eslint-plugin-import@2.x
+          [ -f .eslintrc.json ]
+      - name: ESlint Report
+        run: npm run lint
