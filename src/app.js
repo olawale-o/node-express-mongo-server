@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const handleError = require('./common/error-handler');
+const AppError = require('./common/app-error');
 
 const corsOption = {
   origin: 'http://localhost:3000',
@@ -32,19 +33,25 @@ app.get('/subscribe', async (req, res) => {
 });
 
 app.use('/api/v1/fileupload', require('./file-upload'));
+app.use('/api/v1/users', require('./user'));
 
-app.use('/api/v1', (_req, res) => {
-  res.status(200).json({
-    message: 'connected successfully',
-  });
+// eslint-disable-next-line no-unused-vars
+app.use(async (err, _req, res, _next) => {
+  await handleError(err, res);
 });
 
-app.use(async (err, _req, res) => {
-  await handleError(err, res);
+app.use((err, req, res, next) => {
+  if (!err) {
+    return next(new AppError(404, 'Not found'));
+  }
+  return next();
 });
 
 process.on('uncaughtException', (error) => {
   handleError(error);
+  if (!error.isOperational) {
+    process.exit(1);
+  }
 });
 
 process.on('SIGTERM', () => {
