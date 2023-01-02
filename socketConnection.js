@@ -1,0 +1,157 @@
+/* eslint-disable import/no-extraneous-dependencies */
+/* eslint-disable no-underscore-dangle */
+/* eslint-disable no-param-reassign */
+const { MongoClient } = require('mongodb');
+const { ObjectID } = require('bson');
+const config = require('./config');
+
+const client = new MongoClient(config.get('db.host'));
+
+const User = client.db(config.get('db.name')).collection('users');
+const Conversation = client.db(config.get('db.name')).collection('conversations');
+
+const sessions = new Map();
+const messages = [];
+
+const findSession = (id) => sessions.get(id);
+
+const saveSession = (id, session) => sessions.set(id, session);
+
+const findSessions = () => [...sessions.values()];
+
+// const saveMessages = (message) => messages.push(message);
+
+const findMessagesForUser = (userId) => (
+  messages.filter((message) => message.from === userId || message.to === userId)
+);
+
+const getMessagesForUser = (userId) => {
+  const messagesPerUser = new Map();
+  findMessagesForUser(userId).forEach((message) => {
+    const { from, to } = message;
+    const otherUser = userId === from ? to : from;
+    if (messagesPerUser.has(otherUser)) {
+      messagesPerUser.get(otherUser).push(message);
+    } else {
+      messagesPerUser.set(otherUser, [message]);
+    }
+  });
+  return messagesPerUser;
+};
+
+module.exports = function scoketConnection(IO) {
+  IO.use(async (socket, next) => {
+    const { sessionId } = socket.handshake.auth;
+    if (sessionId) {
+      const session = await findSession(sessionId);
+      if (session) {
+        socket.sessionId = sessionId;
+        socket.userId = session.userId;
+        socket.username = session.username;
+        socket._id = session._id;
+        return next();
+      }
+      return next(new Error('Invalid session'));
+    }
+    const { user } = socket.handshake.auth;
+    if (!user) {
+      return next(new Error('invalid user details'));
+    }
+    socket.username = user.username;
+    socket.userId = user._id;
+    socket.sessionId = user._id;
+    socket._id = user._id;
+    return next();
+  });
+
+  IO.on('connection', async (socket) => {
+    saveSession(socket.sessionId, {
+      userId: socket.userId,
+      username: socket.username,
+      _id: socket._id,
+      online: true,
+    });
+    await socket.join(socket.userId);
+    const users = [];
+    const userMessages = getMessagesForUser(socket.userId);
+    findSessions().forEach((session) => {
+      if (session.userId !== socket.userId) {
+        users.push({
+          userId: session.userId,
+          username: session.username,
+          connected: session.connected,
+          messages: userMessages.get(session.userId) || [],
+        });
+      }
+    });
+    // connect to database and update user online status
+    await User.findOneAndUpdate({ _id: ObjectID(socket.userId) }, { $set: { online: true } });
+    await socket.emit('session', { sessionId: socket.sessionId, userId: socket.userId, username: socket.username });
+    // all connected users
+
+    // get all user's follower online
+    const onlineFollowers = await User.find({ _id: { $ne: ObjectID(socket.userId) } }).toArray();
+    socket.emit('users', onlineFollowers);
+
+    await socket.broadcast.emit('user connected', {
+      userId: socket.userId,
+      username: socket.username,
+      sessionId: socket.sessionId,
+      _id: socket._id,
+    });
+
+    socket.on('private message', async ({ text, to }) => {
+      const newMessage = {
+        from: ObjectID(socket.userId),
+        to: ObjectID(to),
+        text,
+        username: socket.username,
+      };
+      await Conversation.insertOne({
+        from: socket.userId,
+        to,
+        text,
+        createdAt: new Date(Date.now()),
+        updatedAt: new Date(Date.now()),
+      });
+      socket.to(to).emit('private message', newMessage);
+      // saveMessages(newMessage);
+    });
+
+    socket.on('user messages', async ({ _id, username }) => {
+      const dbMessagess = await Conversation.aggregate([
+        {
+          $match: {
+            $or: [
+              { $and: [{ from: socket._id }, { to: _id }] },
+              { $and: [{ from: _id }, { to: socket._id }] },
+            ],
+          },
+        }]).toArray();
+      // const userMessages = getMessagesForUser(socket._id);
+      socket.emit('user messages', {
+        userId: _id,
+        _id,
+        username,
+        messages: dbMessagess || [], // userMessages.get(_id) || []
+      });
+    });
+
+    socket.on('disconnect', async () => {
+      const matchingSockets = await IO.in(socket.userId).allSockets();
+      const isDisconnected = matchingSockets.size === 0;
+      if (isDisconnected) {
+        await User.findOneAndUpdate({ _id: ObjectID(socket.userId) }, { $set: { online: false } });
+        socket.broadcast.emit('user disconnected', {
+          userId: socket.userId,
+          username: socket.username,
+        });
+        saveSession(socket.sessionId, {
+          userId: socket.userId,
+          username: socket.username,
+          connected: socket.connected,
+        });
+      }
+    });
+  });
+};
