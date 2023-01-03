@@ -4,10 +4,16 @@ const AppError = require('../common/app-error');
 
 module.exports = {
   create: async (req, res) => {
-    const { username, password, name } = req.body;
+    const {
+      username, password, name, email,
+    } = req.body;
     try {
+      console.log('register');
       const user = await userService.register({
-        username, password, name, createdAt: new Date(), updatedAt: new Date(),
+        username,
+        password,
+        name,
+        email,
       });
       if (!user) {
         console.log('error');

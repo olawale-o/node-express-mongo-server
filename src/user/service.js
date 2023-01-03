@@ -9,10 +9,14 @@ const verifyPassword = async ({ password, passwordEncrypt }) => (
 
 module.exports = {
   register: async (crendentials) => {
-    const { username, name, password } = crendentials;
+    const {
+      username, name, password, email,
+    } = crendentials;
     return repo.create({
       username,
       name,
+      email,
+      online: false,
       password: bcrypt.hashSync(password, 10),
       createdAt: new Date(),
       updatedAt: new Date(),
