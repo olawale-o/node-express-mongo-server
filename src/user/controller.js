@@ -19,14 +19,15 @@ module.exports = {
         httpOnly: true, sameSite: 'None', secure: true, maxAge: 1000 * 60 * 60 * 24,
       });
       return res.status(201).json({
-        id: user.insertedId,
-        name,
-        username,
+        user: {
+          id: user.insertedId,
+          name,
+          username,
+        },
         accessToken,
         refreshToken,
       });
     } catch (error) {
-      console.log(error);
       return new AppError(500, 'Internal Server error');
     }
   },
@@ -41,15 +42,26 @@ module.exports = {
         httpOnly: true, sameSite: 'None', secure: true, maxAge: 1000 * 60 * 60 * 24,
       });
       return res.status(200).json({
-        // eslint-disable-next-line no-underscore-dangle
-        id: user._id,
-        name: user.name,
-        username: user.username,
+        user: {
+          // eslint-disable-next-line no-underscore-dangle
+          id: user._id,
+          name: user.name,
+          username: user.username,
+        },
         accessToken,
         refreshToken,
       });
     } catch (error) {
-      console.log(error);
+      return next(error);
+    }
+  },
+  allUsers: async (req, res, next) => {
+    try {
+      const allUsers = await userService.getOtherUsers({ username: { $ne: req.query.q } });
+      return res.status(200).json({
+        users: allUsers,
+      });
+    } catch (error) {
       return next(error);
     }
   },

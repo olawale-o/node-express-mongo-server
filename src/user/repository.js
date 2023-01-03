@@ -14,4 +14,5 @@ module.exports = {
   findByIdAndUpdate: async (id, operation) => (
     User.findOneAndUpdate({ _id: ObjectID(id) }, operation)
   ),
+  findAllUsers: async (options) => User.find(options).toArray(),
 };
