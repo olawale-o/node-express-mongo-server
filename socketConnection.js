@@ -57,6 +57,7 @@ module.exports = function scoketConnection(IO) {
     if (!user) {
       return next(new Error('invalid user details'));
     }
+    console.log(user);
     socket.username = user.username;
     socket.userId = user.id;
     socket.sessionId = user.id;
