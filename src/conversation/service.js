@@ -13,7 +13,6 @@ module.exports = {
   },
   chats: async (body) => {
     const { socketId, userId } = body;
-    console.log(socketId, userId);
     return repo.findConversation([
       {
         $match: {

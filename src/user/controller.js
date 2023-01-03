@@ -8,7 +8,6 @@ module.exports = {
       username, password, name, email,
     } = req.body;
     try {
-      console.log('register');
       const user = await userService.register({
         username,
         password,

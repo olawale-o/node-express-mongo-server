@@ -4,7 +4,7 @@
 const { MongoClient } = require('mongodb');
 const { ObjectID } = require('bson');
 const config = require('./config');
-const conversationService = require('./conversation/service');
+const conversationService = require('./src/conversation/service');
 
 const client = new MongoClient(config.get('db.host'));
 
@@ -57,7 +57,6 @@ module.exports = function scoketConnection(IO) {
     if (!user) {
       return next(new Error('invalid user details'));
     }
-    console.log(user);
     socket.username = user.username;
     socket.userId = user.id;
     socket.sessionId = user.id;
@@ -120,14 +119,14 @@ module.exports = function scoketConnection(IO) {
       // saveMessages(newMessage);
     });
 
-    socket.on('user messages', async ({ id, username }) => {
-      const dbMessagess = await conversationService.chats({ socketId: socket.id, userId: id });
+    socket.on('user messages', async ({ _id, username }) => {
+      const dbMessages = await conversationService.chats({ socketId: socket.userId, userId: _id });
       // const userMessages = getMessagesForUser(socket.id);
       socket.emit('user messages', {
-        userId: id,
-        id,
+        userId: _id,
+        id: _id,
         username,
-        messages: dbMessagess || [], // userMessages.get(id) || []
+        messages: dbMessages || [], // userMessages.get(id) || []
       });
     });
 
