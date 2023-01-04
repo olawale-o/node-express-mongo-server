@@ -28,6 +28,7 @@ module.exports = {
           id: user.insertedId,
           name,
           username,
+          email,
         },
         accessToken,
         refreshToken,
@@ -42,7 +43,8 @@ module.exports = {
       const user = await userService.login({ username, password });
       const accessToken = await tokenService.signAccessToken({ userId: user.insertedId });
       const refreshToken = await tokenService.signRefreshToken({ userId: user.insertedId });
-      await userService.updateToken(user.insertedId, { $set: { accessToken, refreshToken } });
+      // eslint-disable-next-line no-underscore-dangle
+      await userService.updateToken(user._id, { $set: { accessToken, refreshToken } });
       res.cookie('jwt', refreshToken, {
         httpOnly: true, sameSite: 'None', secure: true, maxAge: 1000 * 60 * 60 * 24,
       });
@@ -52,6 +54,7 @@ module.exports = {
           id: user._id,
           name: user.name,
           username: user.username,
+          email: user.email,
         },
         accessToken,
         refreshToken,
@@ -65,6 +68,34 @@ module.exports = {
       const allUsers = await userService.getOtherUsers({ username: { $ne: req.query.q } });
       return res.status(200).json({
         users: allUsers,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  },
+  update: async (req, res, next) => {
+    const {
+      email, name, username, id,
+    } = req.body;
+    try {
+      const profile = await userService.updateProfile(id, { $set: { email, name, username } });
+      const accessToken = await tokenService.signAccessToken({ userId: id });
+      const refreshToken = await tokenService.signRefreshToken({ userId: id });
+      // eslint-disable-next-line no-underscore-dangle
+      await userService.updateToken(id, { $set: { accessToken, refreshToken } });
+      res.cookie('jwt', refreshToken, {
+        httpOnly: true, sameSite: 'None', secure: true, maxAge: 1000 * 60 * 60 * 24,
+      });
+      return res.status(200).json({
+        user: {
+          // eslint-disable-next-line no-underscore-dangle
+          id,
+          name: profile.name,
+          username: profile.username,
+          email: profile.email,
+          accessToken,
+          refreshToken,
+        },
       });
     } catch (error) {
       return next(error);
