@@ -4,3 +4,5 @@ node_modules
 storage
 
 *.http
+
+config/production.json
