@@ -105,7 +105,6 @@ module.exports = {
       const refreshToken = await tokenService.signRefreshToken({ userId: id });
       // eslint-disable-next-line no-underscore-dangle
       const profile = await userService.updateToken(id, { $set: { accessToken, refreshToken } });
-      console.log(profile);
       res.cookie('jwt', refreshToken, {
         httpOnly: true, sameSite: 'None', secure: true, maxAge: 1000 * 60 * 60 * 24,
       });
