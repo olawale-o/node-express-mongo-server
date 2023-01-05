@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const repo = require('./repository');
 const AppError = require('../common/app-error');
 
-const verifyUserName = async (crendentials) => repo.findByUsername(crendentials);
+const verifyUserName = async (crendentials) => repo.findByUsernameOrEmail(crendentials);
 const verifyPassword = async ({ password, passwordEncrypt }) => (
   bcrypt.compareSync(password, passwordEncrypt)
 );

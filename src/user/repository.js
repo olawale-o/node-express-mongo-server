@@ -15,4 +15,9 @@ module.exports = {
     User.findOneAndUpdate({ _id: ObjectID(id) }, operation, options)
   ),
   findAllUsers: async (options) => User.find(options).toArray(),
+  findByUsernameOrEmail: async ({ username }) => (
+    User.findOne(
+      { $or: [{ email: username }, { username }] },
+    )
+  ),
 };
