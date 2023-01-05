@@ -87,7 +87,11 @@ module.exports = function scoketConnection(IO) {
     });
 
     // connect to database and update user online status
-    await User.findOneAndUpdate({ _id: ObjectID(socket.userId) }, { $set: { online: true } });
+    await User.findOneAndUpdate(
+      { _id: ObjectID(socket.userId) },
+      { $set: { online: true } },
+      { returnDocument: 'after' },
+    );
     await socket.emit('session', {
       sessionId: socket.sessionId,
       userId: socket.userId,
