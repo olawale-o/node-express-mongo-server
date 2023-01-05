@@ -11,8 +11,8 @@ module.exports = {
   create: async (credentials) => User.insertOne(credentials),
   findByUsername: async ({ username }) => User.findOne({ username }),
   findById: async ({ id }) => User.findOne({ _id: ObjectID(id) }),
-  findByIdAndUpdate: async (id, operation) => (
-    User.findOneAndUpdate({ _id: ObjectID(id) }, operation)
+  findByIdAndUpdate: async (id, operation, options = {}) => (
+    User.findOneAndUpdate({ _id: ObjectID(id) }, operation, options)
   ),
   findAllUsers: async (options) => User.find(options).toArray(),
 };

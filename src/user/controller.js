@@ -1,7 +1,12 @@
+const Datauri = require('datauri/parser');
+const path = require('path');
+
 const userService = require('./service');
 const tokenService = require('../services/token-service');
 const AppError = require('../common/app-error');
+const cloudinaryService = require('../services/cloudinary-service');
 
+const dUri = new Datauri();
 module.exports = {
   create: async (req, res) => {
     const {
@@ -78,7 +83,22 @@ module.exports = {
       email, name, username, id,
     } = req.body;
     try {
-      const profile = await userService.updateProfile(id, { $set: { email, name, username } });
+      const uploder = async (uploadedFile) => cloudinaryService.fileUploader(uploadedFile);
+
+      const fileContent = dUri.format(
+        path.extname(req.file.originalname).toString(),
+        req.file.buffer,
+      ).content;
+
+      const result = await uploder(fileContent);
+
+      const profile = await userService.updateProfile(id, {
+        $set: {
+          email, name, username, avatar: result.secure_url,
+        },
+      }, {
+        upsert: true, returnDocument: 'after',
+      });
       const accessToken = await tokenService.signAccessToken({ userId: id });
       const refreshToken = await tokenService.signRefreshToken({ userId: id });
       // eslint-disable-next-line no-underscore-dangle
@@ -90,12 +110,13 @@ module.exports = {
         user: {
           // eslint-disable-next-line no-underscore-dangle
           id,
-          name: profile.name,
-          username: profile.username,
-          email: profile.email,
-          accessToken,
-          refreshToken,
+          name: profile.value.name,
+          username: profile.value.username,
+          email: profile.value.email,
+          avatar: profile.value.avatar,
         },
+        accessToken,
+        refreshToken,
       });
     } catch (error) {
       return next(error);

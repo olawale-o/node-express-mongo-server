@@ -34,5 +34,7 @@ module.exports = {
   getToken: async (credentials) => repo.findById(credentials),
   updateToken: async (credentials, operation) => repo.findByIdAndUpdate(credentials, operation),
   getOtherUsers: async (options) => repo.findAllUsers(options),
-  updateProfile: async (credentials, operation) => repo.findByIdAndUpdate(credentials, operation),
+  updateProfile: async (credentials, operation, options) => (
+    repo.findByIdAndUpdate(credentials, operation, options)
+  ),
 };
