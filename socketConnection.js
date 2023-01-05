@@ -134,6 +134,18 @@ module.exports = function scoketConnection(IO) {
       });
     });
 
+    socket.on('profile change', (data) => {
+      const { user: { id, username } } = data;
+      const currentUser = findSession(id);
+      currentUser.username = username;
+      socket.username = username;
+      IO.emit('profile change', {
+        sessionId: socket.sessionId,
+        userId: socket.userId,
+        username,
+      });
+    });
+
     socket.on('disconnect', async () => {
       const matchingSockets = await IO.in(socket.userId).allSockets();
       const isDisconnected = matchingSockets.size === 0;
