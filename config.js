@@ -26,6 +26,11 @@ const config = convict({
       default: 'generaldb',
     },
   },
+  cloudinary: {
+    cloud_name: 'cloud_name',
+    api_key: 'api_key',
+    api_secret: 'api_secret',
+  },
 });
 
 const env = config.get('env');
