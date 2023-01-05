@@ -17,6 +17,7 @@ module.exports = {
       name,
       email,
       online: false,
+      avatar: 'profile',
       password: bcrypt.hashSync(password, 10),
       createdAt: new Date(),
       updatedAt: new Date(),

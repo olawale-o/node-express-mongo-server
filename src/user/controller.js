@@ -60,6 +60,7 @@ module.exports = {
           name: user.name,
           username: user.username,
           email: user.email,
+          avatar: user.avatar,
         },
         accessToken,
         refreshToken,
@@ -93,17 +94,18 @@ module.exports = {
         result = await uploder(fileContent);
       }
 
-      const profile = await userService.updateProfile(id, {
+      await userService.updateProfile(id, {
         $set: {
           email, name, username, avatar: result?.secure_url || avatar,
         },
       }, {
-        upsert: true, returnDocument: 'after',
+        returnNewDocument: true,
       });
       const accessToken = await tokenService.signAccessToken({ userId: id });
       const refreshToken = await tokenService.signRefreshToken({ userId: id });
       // eslint-disable-next-line no-underscore-dangle
-      await userService.updateToken(id, { $set: { accessToken, refreshToken } });
+      const profile = await userService.updateToken(id, { $set: { accessToken, refreshToken } });
+      console.log(profile);
       res.cookie('jwt', refreshToken, {
         httpOnly: true, sameSite: 'None', secure: true, maxAge: 1000 * 60 * 60 * 24,
       });
