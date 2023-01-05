@@ -1,8 +1,10 @@
 .vscode
-.DS_store
+.DS_Store
 node_modules
 storage
 
 *.http
 
 config/production.json
+
+npm-debug.log
