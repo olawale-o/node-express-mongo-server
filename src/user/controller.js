@@ -80,21 +80,22 @@ module.exports = {
   },
   update: async (req, res, next) => {
     const {
-      email, name, username, id,
+      email, name, username, id, avatar,
     } = req.body;
     try {
-      const uploder = async (uploadedFile) => cloudinaryService.fileUploader(uploadedFile);
-
-      const fileContent = dUri.format(
-        path.extname(req.file.originalname).toString(),
-        req.file.buffer,
-      ).content;
-
-      const result = await uploder(fileContent);
+      let result = null;
+      if (req.file) {
+        const uploder = async (fileContent) => cloudinaryService.fileUploader(fileContent);
+        const fileContent = dUri.format(
+          path.extname(req.file.originalname).toString(),
+          req.file.buffer,
+        ).content;
+        result = await uploder(fileContent);
+      }
 
       const profile = await userService.updateProfile(id, {
         $set: {
-          email, name, username, avatar: result.secure_url,
+          email, name, username, avatar: result?.secure_url || avatar,
         },
       }, {
         upsert: true, returnDocument: 'after',
