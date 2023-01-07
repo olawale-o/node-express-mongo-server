@@ -47,15 +47,4 @@ app.use((err, req, res, next) => {
   return next();
 });
 
-process.on('uncaughtException', (error) => {
-  handleError(error);
-  if (!error.isOperational) {
-    process.exit(1);
-  }
-});
-
-process.on('SIGTERM', () => {
-  console.log('graceful shutdown');
-});
-
 module.exports = app;

@@ -6,6 +6,7 @@ const client = require('./src/database')(config.get('db.host'));
 const dbConnection = require('./src/database/connection');
 const app = require('./src/app');
 const socketConnection = require('./socketConnection');
+const handleError = require('./src/common/error-handler');
 
 const server = http.createServer(app);
 
@@ -27,5 +28,16 @@ dbConnection(client, config.get('db.name'))
   })
   .catch(console.log)
   .finally(() => client.close());
+
+process.on('uncaughtException', (error) => {
+  handleError(error);
+  if (!error.isOperational) {
+    process.exit(1);
+  }
+});
+
+process.on('SIGTERM', () => {
+  client.close();
+});
 
 module.exports = server;
