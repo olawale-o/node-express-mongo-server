@@ -9,8 +9,8 @@ cloudinary.config({
 });
 
 module.exports = {
-  fileUploader: (file, folder = 'chats') => new Promise((resolve, reject) => {
-    cloudinary.v2.uploader.upload(file, { resource_type: 'auto', folder: `${folder}/` })
+  fileUploader: (file, folder = 'chats', resourceType = 'auto') => new Promise((resolve, reject) => {
+    cloudinary.v2.uploader.upload(file, { resource_type: resourceType, folder: `${folder}/` })
       .then((result) => resolve(result))
       .catch((error) => {
         console.log(error);
