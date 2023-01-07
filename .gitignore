@@ -8,3 +8,5 @@ storage
 config/production.json
 
 npm-debug.log
+
+asset/*
