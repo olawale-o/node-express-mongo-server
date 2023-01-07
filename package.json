@@ -13,6 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.1",
     "cloudinary": "^1.33.0",
@@ -21,6 +22,8 @@
     "cors": "^2.8.5",
     "datauri": "^4.1.0",
     "express": "^4.18.2",
+    "fluent-ffmpeg": "^2.1.2",
+    "hls-server": "^1.5.0",
     "http": "^0.0.1-security",
     "http-errors": "^2.0.0",
     "joi": "^17.7.0",
