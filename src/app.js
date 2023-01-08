@@ -4,8 +4,16 @@ const cors = require('cors');
 const handleError = require('./common/error-handler');
 const AppError = require('./common/app-error');
 
+const whitelist = ['http://localhost:3000', 'http://localhost:8080'];
+
 const corsOption = {
-  origin: 'http://localhost:3000',
+  origin(origin, callback) {
+    if (whitelist.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credential: true,
 };
 
