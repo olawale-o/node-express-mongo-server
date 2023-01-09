@@ -6,5 +6,6 @@ const upload = multer({ dest: `${process.cwd()}/storage` });
 
 router.post('/', upload.single('image'), controller.create);
 router.get('/video-chunk', controller.getVideo);
+router.post('/:id/videos', controller.newVideoUpload);
 
 module.exports = router;
