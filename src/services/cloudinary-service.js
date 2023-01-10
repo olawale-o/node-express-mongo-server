@@ -17,9 +17,9 @@ module.exports = {
         reject(new Error('Unable to upload file at this time'));
       });
   }),
-  fileLargeUploader: (file, folder = 'chats', resourceType = 'auto') => new Promise((resolve, reject) => {
+  fileLargeUploader: (path, folder = 'chats', resourceType = 'auto') => new Promise((resolve, reject) => {
     cloudinary.v2.uploader.upload_large(
-      file,
+      path,
       {
         resource_type: resourceType,
         chunk_size: 6000000,

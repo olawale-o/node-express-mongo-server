@@ -1,6 +1,4 @@
-const Datauri = require('datauri/parser');
 const fs = require('fs');
-const path = require('path');
 const cloudinary = require('cloudinary');
 
 const config = require('../../config');
@@ -10,10 +8,8 @@ const getChunkProps = require('./video-chunk');
 
 const AppError = require('../common/app-error');
 
-const cloudinaryService = require('../services/cloudinary-service');
 const uploadService = require('./service');
 
-const dUri = new Datauri();
 module.exports = {
   create: (req, res, next) => {
     try {
@@ -53,19 +49,11 @@ module.exports = {
   },
   newVideoUpload: async (req, res, next) => {
     const { id } = req.params;
-    console.log(req.file.buffer);
+    const { url } = req.body;
     try {
-      const uploder = async (fileContent) => cloudinaryService.uploadFromBuffer(fileContent);
-      const fileContent = dUri.format(
-        path.extname(req.file.originalname).toString(),
-        req.file.buffer,
-      ).content;
-      const result = await uploder(fileContent);
-      console.log(result);
-      await uploadService.newUpload({ uploader: id, url: result.secure_url });
+      await uploadService.newUpload({ uploader: id, url });
       return res.status(200).json({
         message: 'File uploaded succesfully',
-        url: result.secure_url,
       });
     } catch (error) {
       return next(new AppError(500, 'Internal server error'));
