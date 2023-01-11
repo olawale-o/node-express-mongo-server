@@ -1,7 +1,7 @@
 /* eslint-disable no-underscore-dangle */
 const jwt = require('jsonwebtoken');
 const userService = require('../user/service');
-// const AppError = require('../common/app-error');
+const AppError = require('../common/app-error');
 
 const signToken = (credentials, secretKey, expiresIn) => new Promise((resolve, reject) => {
   const { userId } = credentials;
@@ -12,7 +12,7 @@ const signToken = (credentials, secretKey, expiresIn) => new Promise((resolve, r
   };
   jwt.sign({ userId }, secretKey, options, (err, token) => {
     if (err) {
-      reject(new Error({ isError: true, message: 'Invalid operation!' }));
+      reject(new AppError(403, 'Forbidden'));
     } else {
       resolve(token);
     }
