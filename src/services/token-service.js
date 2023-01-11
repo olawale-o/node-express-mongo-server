@@ -22,7 +22,7 @@ const signToken = (credentials, secretKey, expiresIn) => new Promise((resolve, r
 const verifyToken = (token, secretKey) => new Promise((resolve, reject) => {
   jwt.verify(token, secretKey, (err, decoded) => {
     if (err) {
-      reject(new Error({ isError: true, message: 'Invalid operation!' }));
+      reject(new AppError(403, 'Forbidden'));
     } else {
       resolve(decoded);
     }
