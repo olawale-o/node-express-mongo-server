@@ -20,4 +20,5 @@ module.exports = {
       { $or: [{ email: username }, { username }] },
     )
   ),
+  findUserBy: async (options) => User.findOne(options),
 };
