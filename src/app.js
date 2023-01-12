@@ -1,6 +1,8 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
+
 const handleError = require('./common/error-handler');
 const AppError = require('./common/app-error');
 
@@ -14,15 +16,25 @@ const corsOption = {
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credential: true,
+  credentials: true,
+  optionsSuccessStatus: 200,
 };
 
 const app = express();
 
+app.use((req, res, next) => {
+  const { origin } = req.headers;
+  if (whitelist.includes(origin)) {
+    res.header('Access-Control-Allow-Credentials', true);
+  }
+  next();
+});
+
+app.use(cors(corsOption));
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-app.use(cors(corsOption));
+app.use(cookieParser());
 
 app.get('/subscribe', async (req, res) => {
   res.writeHead(200, {
@@ -39,6 +51,16 @@ app.get('/subscribe', async (req, res) => {
 
   req.on('close', () => res.end('OK'));
 });
+
+// app.get('/auth', (req, res) => {
+//   res.cookie('authcookie', 'accessToken');
+//   res.sendStatus(200);
+// });
+
+// app.get('/api', (req, res) => {
+//   console.log(req.cookies);
+//   res.send('Hello World!');
+// });
 
 app.use('/api/v1/fileupload', require('./file-upload'));
 app.use('/api/v1/users', require('./user'));
