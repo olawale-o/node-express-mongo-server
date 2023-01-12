@@ -46,12 +46,14 @@ module.exports = {
     const { username, password } = req.body;
     try {
       const user = await userService.login({ username, password });
-      const accessToken = await tokenService.signAccessToken({ userId: user.insertedId });
-      const refreshToken = await tokenService.signRefreshToken({ userId: user.insertedId });
+      // eslint-disable-next-line no-underscore-dangle
+      const accessToken = await tokenService.signAccessToken({ userId: user._id });
+      // eslint-disable-next-line no-underscore-dangle
+      const refreshToken = await tokenService.signRefreshToken({ userId: user._id });
       // eslint-disable-next-line no-underscore-dangle
       await userService.updateToken(user._id, { $set: { accessToken, refreshToken } });
       res.cookie('jwt', refreshToken, {
-        httpOnly: true, sameSite: 'None', secure: true, maxAge: 1000 * 60 * 60 * 24,
+        httpOnly: true, sameSite: 'Lax', secure: false, maxAge: 1000 * 60 * 60 * 24,
       });
       return res.status(200).json({
         user: {
@@ -119,6 +121,19 @@ module.exports = {
         },
         accessToken,
         refreshToken,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  },
+  refreshToken: async (req, res, next) => {
+    const { cookies } = req;
+    if (!cookies?.jwt) return res.sendStatus(401);
+    const refreshToken = cookies.jwt;
+    try {
+      const accessToken = await userService.verifyRefereshToken({ refreshToken });
+      return res.status(200).json({
+        accessToken,
       });
     } catch (error) {
       return next(error);
