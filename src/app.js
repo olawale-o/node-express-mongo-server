@@ -5,6 +5,7 @@ const cookieParser = require('cookie-parser');
 
 const handleError = require('./common/error-handler');
 const AppError = require('./common/app-error');
+const isTokenValid = require('./middlewares/is-token-valid');
 
 const whitelist = ['http://localhost:3000', 'http://localhost:8080'];
 
@@ -52,18 +53,14 @@ app.get('/subscribe', async (req, res) => {
   req.on('close', () => res.end('OK'));
 });
 
-// app.get('/auth', (req, res) => {
-//   res.cookie('authcookie', 'accessToken');
-//   res.sendStatus(200);
-// });
-
-// app.get('/api', (req, res) => {
-//   console.log(req.cookies);
-//   res.send('Hello World!');
-// });
-
-app.use('/api/v1/fileupload', require('./file-upload'));
 app.use('/api/v1/users', require('./user'));
+
+app.use(isTokenValid);
+app.use('/api/v1/fileupload', require('./file-upload'));
+
+app.use('/api/v1', (req, res) => {
+  res.status(200).json({ message: 'Welcome to the API' });
+});
 
 // eslint-disable-next-line no-unused-vars
 app.use(async (err, _req, res, _next) => {
