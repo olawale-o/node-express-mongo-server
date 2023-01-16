@@ -1,8 +1,8 @@
 const Datauri = require('datauri/parser');
 const path = require('path');
 
-const userService = require('./service');
 const tokenService = require('../services/token-service');
+const userService = require('./service');
 const AppError = require('../common/app-error');
 const cloudinaryService = require('../services/cloudinary-service');
 
@@ -24,8 +24,8 @@ module.exports = {
       }
       const accessToken = await tokenService.signAccessToken({ userId: user.insertedId });
       const refreshToken = await tokenService.signRefreshToken({ userId: user.insertedId });
-      await userService.updateToken(user.insertedId, { $set: { accessToken, refreshToken } });
-      res.cookie('jwt', refreshToken, {
+      await userService.updateToken(user.insertedId, { $set: { refreshToken } });
+      res.cookie('jwt', 'refreshToken', {
         httpOnly: true, sameSite: 'None', secure: true, maxAge: 1000 * 60 * 60 * 24,
       });
       return res.status(201).json({
@@ -43,17 +43,22 @@ module.exports = {
     }
   },
   login: async (req, res, next) => {
+    const { cookies } = req;
     const { username, password } = req.body;
     try {
       const user = await userService.login({ username, password });
       // eslint-disable-next-line no-underscore-dangle
       const accessToken = await tokenService.signAccessToken({ userId: user._id });
+      if (cookies?.jwt) {
+        res.clearCookie('jwt', { httpOnly: true, sameSite: 'None', secure: true });
+      }
+
       // eslint-disable-next-line no-underscore-dangle
       const refreshToken = await tokenService.signRefreshToken({ userId: user._id });
       // eslint-disable-next-line no-underscore-dangle
-      await userService.updateToken(user._id, { $set: { accessToken, refreshToken } });
+      await userService.updateToken(user._id, { $set: { refreshToken } });
       res.cookie('jwt', refreshToken, {
-        httpOnly: true, sameSite: 'Lax', secure: false, maxAge: 1000 * 60 * 60 * 24,
+        httpOnly: true, sameSite: 'None', secure: true, maxAge: 1000 * 60 * 60 * 24,
       });
       return res.status(200).json({
         user: {
@@ -128,10 +133,21 @@ module.exports = {
   },
   refreshToken: async (req, res, next) => {
     const { cookies } = req;
+    console.log(cookies);
     if (!cookies?.jwt) return res.sendStatus(401);
     const refreshToken = cookies.jwt;
     try {
-      const accessToken = await userService.verifyRefereshToken({ refreshToken });
+      const foundUser = await userService.verifyRefereshToken({ refreshToken });
+      const payload = await tokenService.verifyRefreshToken(refreshToken);
+      if (!payload) {
+        return new AppError(403, 'Forbidden');
+      }
+      // eslint-disable-next-line no-underscore-dangle
+      if (payload.userId !== foundUser._id.toString()) {
+        return new AppError(403, 'Forbidden');
+      }
+      // eslint-disable-next-line no-underscore-dangle
+      const accessToken = await tokenService.signAccessToken({ userId: foundUser._id });
       return res.status(200).json({
         accessToken,
       });
