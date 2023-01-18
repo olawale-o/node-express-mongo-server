@@ -54,6 +54,7 @@ app.get('/subscribe', async (req, res) => {
 });
 
 app.use('/api/v1/users', require('./user'));
+app.use('/api/v1/token', require('./user'));
 
 app.use(isTokenValid);
 app.use('/api/v1/fileupload', require('./file-upload'));
