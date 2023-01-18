@@ -1,7 +1,6 @@
 const bcrypt = require('bcryptjs');
 const repo = require('./repository');
 const AppError = require('../common/app-error');
-const tokenService = require('../services/token-service');
 
 const verifyUserName = async (crendentials) => repo.findByUsernameOrEmail(crendentials);
 const verifyPassword = async ({ password, passwordEncrypt }) => (
@@ -48,16 +47,6 @@ module.exports = {
     if (!foundUser) {
       return new AppError(401, 'Unauthorized');
     }
-    const payload = await tokenService.verifyRefreshToken(credentials.refreshToken);
-    if (!payload) {
-      return new AppError(403, 'Forbidden');
-    }
-    // eslint-disable-next-line no-underscore-dangle
-    if (payload.userId !== foundUser._id.toString()) {
-      return new AppError(403, 'Forbidden');
-    }
-    // eslint-disable-next-line no-underscore-dangle
-    const accessToken = await tokenService.signAccessToken({ userId: foundUser._id });
-    return accessToken;
+    return foundUser;
   },
 };
