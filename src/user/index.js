@@ -7,6 +7,5 @@ router.post('/new', controller.create);
 router.post('/login', controller.login);
 router.get('/', controller.allUsers);
 router.put('/', multerStorage.single('profile'), controller.update);
-router.get('/token/refresh', controller.refreshToken);
 
 module.exports = router;
