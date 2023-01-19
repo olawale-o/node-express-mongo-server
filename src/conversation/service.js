@@ -1,11 +1,14 @@
+/* eslint-disable import/no-extraneous-dependencies */
+const { ObjectID } = require('bson');
+
 const repo = require('./repository');
 
 module.exports = {
   newChat: async (body) => {
     const { from, to, text } = body;
     await repo.insertOne({
-      from,
-      to,
+      from: ObjectID(from),
+      to: ObjectID(to),
       text,
       createdAt: new Date(Date.now()),
       updatedAt: new Date(Date.now()),
@@ -17,8 +20,8 @@ module.exports = {
       {
         $match: {
           $or: [
-            { $and: [{ from: socketId }, { to: userId }] },
-            { $and: [{ from: userId }, { to: socketId }] },
+            { $and: [{ from: ObjectID(socketId) }, { to: ObjectID(userId) }] },
+            { $and: [{ from: ObjectID(userId) }, { to: ObjectID(socketId) }] },
           ],
         },
       }]);
