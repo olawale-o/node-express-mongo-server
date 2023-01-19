@@ -39,7 +39,7 @@ const getMessagesForUser = (userId) => {
   return messagesPerUser;
 };
 
-module.exports = function scoketConnection(IO) {
+module.exports = function socketConnection(IO) {
   IO.use(async (socket, next) => {
     const { sessionId } = socket.handshake.auth;
     if (sessionId) {
