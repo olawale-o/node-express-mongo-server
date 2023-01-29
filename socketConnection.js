@@ -5,6 +5,7 @@ const { MongoClient } = require('mongodb');
 const { ObjectID } = require('bson');
 const config = require('./config');
 const conversationService = require('./src/conversation/service');
+const friendService = require('./src/friend/service');
 
 const client = new MongoClient(config.get('db.host'));
 
@@ -143,6 +144,13 @@ module.exports = function socketConnection(IO) {
         sessionId: socket.sessionId,
         userId: socket.userId,
         username,
+      });
+    });
+    socket.on('add friend', async (data) => {
+      const { to } = data;
+      await friendService.addFriend({ from: socket.userId, to });
+      socket.to(to).emit('add friend', {
+        from: socket.userId,
       });
     });
 
