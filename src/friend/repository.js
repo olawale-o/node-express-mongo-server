@@ -25,23 +25,7 @@ module.exports = {
       },
     ]).toArray()
   ),
-  addFriend: async ({ from, to }) => {
-    const friendLimit = 2;
-    const friendCount = await Friend.findOne({
-      $and: [
-        { from: ObjectID(from) },
-        { bucketSize: { $lt: friendLimit } },
-      ],
-    });
-    if (!friendCount) {
-      await Friend.insertOne(
-        { from: ObjectID(from), friends: [ObjectID(to)], bucketSize: 1 },
-      );
-    } else {
-      await Friend.updateOne(
-        { from: ObjectID(from) },
-        { $push: { friends: ObjectID(to) }, $inc: { bucketSize: 1 } },
-      );
-    }
-  },
+  findOne: async (filter) => Friend.findOne(filter),
+  insertOne: async (filter) => Friend.insertOne(filter),
+  updateOne: async (filter) => Friend.updateOne(filter),
 };
